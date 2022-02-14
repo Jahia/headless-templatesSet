@@ -1,2 +1,11 @@
 <jnt = 'http://www.jahia.org/jahia/nt/1.0'>
 <jmix = 'http://www.jahia.org/jahia/mix/1.0'>
+
+//jmix:hasTemplateNode
+[jnt:headlessPage] > nt:base, jmix:nodenameInfo, jmix:observable, jmix:basemetadata, mix:title, jmix:publication, jmix:tagged, jmix:navMenuItem, jmix:searchable
+ orderable
+// - jcr:title (string) i18n mandatory boost=2.0
+// - j:templateName (string,choicelist[templatesNode]) mandatory nofulltext
+ - j:isHomePage (boolean) hidden
+ + * (nt:base) = nt:base version
+ + * (jmix:navMenuItem)

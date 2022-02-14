@@ -15,23 +15,9 @@
 <%--@elvariable id="url" type="org.jahia.services.render.URLGenerator"--%>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
-    <title>${fn:escapeXml(renderContext.mainResource.node.displayableName)}</title>
+    <meta http-equiv="Refresh" content="0; url=//localhost:3000" />
 </head>
-
 <body>
-
-<div class="bodywrapper"><!--start bodywrapper-->
-    <template:area path="pagecontent"/>
-</div>
-<!--stop bodywrapper-->
-
-<c:if test="${renderContext.editMode}">
-    <template:addResources type="css" resources="edit.css" />
-</c:if>
-<template:addResources type="css" resources="960.css,01web.css"/>
-<template:theme/>
-
+    <p>Redirect to <a href="//localhost:3000">this link</a>.</p>
 </body>
 </html>

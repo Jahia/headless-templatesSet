@@ -57,13 +57,14 @@
     <groupId>org.jahia.se.modules</groupId>
     <artifactId>headless-templatesSet</artifactId>
     <name>Templates Set for headless project</name>
-    <version>1.0.0-SNAPSHOT</version>    
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <description>This is the custom profile module (Templates Set for headless project) for running on a Jahia server.</description>
 
     <scm>
-        <connection>scm:dummy:uri</connection>
-        <developerConnection>scm:dummy:uri</developerConnection>
+        <connection>scm:git:git@github.com:Jahia/headless-templatesSet.git</connection>
+        <developerConnection>scm:git:git@github.com:Jahia/headless-templatesSet.git</developerConnection>
+        <url>https://github.com/Jahia/headless-templatesSet</url>
     </scm>
 
     <repositories>
@@ -91,6 +92,7 @@
                     <instructions>
                         <Jahia-Module-Type>templatesSet</Jahia-Module-Type>
                         <Jahia-Depends>default</Jahia-Depends>
+                        <Jahia-Static-Resources>/img</Jahia-Static-Resources>
                     </instructions>
                 </configuration>
             </plugin>
