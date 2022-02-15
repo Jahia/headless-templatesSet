@@ -15,7 +15,7 @@
 <%--@elvariable id="url" type="org.jahia.services.render.URLGenerator"--%>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-    <meta http-equiv="Refresh" content="0; url=//localhost:3000" />
+<%--    <meta http-equiv="Refresh" content="0; url=//localhost:3000" />--%>
 </head>
 <body>
     <p>Redirect to <a href="//localhost:3000">this link</a>.</p>

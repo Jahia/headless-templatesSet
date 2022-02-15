@@ -67,6 +67,10 @@
         <url>https://github.com/Jahia/headless-templatesSet</url>
     </scm>
 
+    <properties>
+        <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
+    </properties>
+
     <repositories>
         <repository>
             <id>jahia-public</id>
@@ -90,6 +94,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <_dsannotations>*</_dsannotations>
                         <Jahia-Module-Type>templatesSet</Jahia-Module-Type>
                         <Jahia-Depends>default</Jahia-Depends>
                         <Jahia-Static-Resources>/img</Jahia-Static-Resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <bean id="Toolbar.Item.NewHeadlessPage" class="org.jahia.services.uicomponents.bean.toolbar.Item">
+        <property name="actionItem">
+            <bean class="org.jahia.ajax.gwt.client.widget.toolbar.action.NewContentActionItem">
+                <property name="nodeTypes" value="jnt:headlessPage"/>
+                <!-- BACKLOG-11556 : includeSubTypes = false has been added to get menu entry to open CE in Page composer. Don't this constraint in 8.1-->
+                <property name="includeSubTypes" value="false"/>
+                <property name="parentTypes" value="jnt:page jnt:navMenuText"/>
+            </bean>
+        </property>
+        <property name="titleKey" value="label.newHeadlessPage"/>
+        <property name="icon" value="newAction"/>
+        <property name="parentToolbar" ref="pagesContextMenuAnthracite"/>
+        <property name="requiredModule" value="headless-templatesSet"/>
+        <property name="requiredPermission" value="newExternalLinkAction"/>
+    </bean>
+</beans>
