@@ -14,9 +14,16 @@ import org.apache.http.message.BasicHttpEntityEnclosingRequest;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.message.HeaderGroup;
 import org.apache.http.util.EntityUtils;
+import org.jahia.api.Constants;
 import org.jahia.bin.filters.AbstractServletFilter;
+import org.jahia.exceptions.JahiaException;
+import org.jahia.services.SpringContextSingleton;
+import org.jahia.services.render.URLResolver;
+import org.jahia.services.render.URLResolverFactory;
+import org.jahia.services.sites.JahiaSitesService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +40,7 @@ import java.net.URI;
 import java.util.BitSet;
 import java.util.Enumeration;
 import java.util.Formatter;
+import java.util.Map;
 
 /**
  * An HTTP reverse proxy/gateway servlet. It is designed to be extended for customization
@@ -56,6 +64,13 @@ import java.util.Formatter;
 @Component(immediate = true, service = AbstractServletFilter.class)
 public class ProxyServlet extends AbstractServletFilter {
     private static final Logger logger = LoggerFactory.getLogger(ProxyServlet.class);
+    private Map<String, ?> configuration;
+    private JahiaSitesService jahiaSitesService;
+
+    @Reference
+    public void setJahiaSitesService(JahiaSitesService jahiaSitesService) {
+        this.jahiaSitesService = jahiaSitesService;
+    }
     /* INIT PARAMETER NAME CONSTANTS */
 
     /** A boolean parameter name to enable logging of input and target URLs to the servlet log. */
@@ -141,8 +156,9 @@ public class ProxyServlet extends AbstractServletFilter {
     }
 
     @Activate
-    public void activate() {
+    public void activate(Map<String, ?> configuration) {
         logger.info("Started ProxyServlet filter from headless templatesSet with hot deploy...");
+        this.configuration=configuration;
         setMatchAllUrls(true);
     }
 
@@ -324,12 +340,39 @@ public class ProxyServlet extends AbstractServletFilter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-        logger.info(" *** httpServletRequest.getRequestURI()..."+httpServletRequest.getRequestURI());
-        //TODO test if webproject is headless (based on templateSet enabled) and if it is redirect the pageComposer.
-        if (httpServletRequest.getRequestURI().startsWith("/modules/next-proxy/") || httpServletRequest.getRequestURI().startsWith("/_next/")) {
+        URLResolver urlResolver = ((URLResolverFactory) SpringContextSingleton
+                .getBean("urlResolverFactory"))
+                .createURLResolver(
+                        httpServletRequest.getPathInfo(),
+                        httpServletRequest.getServerName(),
+                        Constants.EDIT_WORKSPACE,
+                        httpServletRequest
+                );
+//        try {
+        if (
+            "headless-industrial".equals(urlResolver.getSiteKey()) &&
+            (
+                httpServletRequest.getRequestURI().startsWith("/cms/editframe/default/en/sites/headless-industrial/home.html") ||
+                httpServletRequest.getRequestURI().startsWith("/_next/")
+            )
+        ){
+
+            logger.info(" *** httpServletRequest.getRequestURI()..."+httpServletRequest.getRequestURI());
+//            "headless-templatesSet".equals(jahiaSitesService.getSiteByKey(urlResolver.getSiteKey()).getTemplatePackageName());
             service(httpServletRequest, (HttpServletResponse) response);
             return;
         }
+//        } catch (JahiaException e) {
+//            e.printStackTrace();
+//        }
+
+
+//        if (httpServletRequest.getRequestURI().startsWith("/cms/editframe/default/en/sites/headless-industrial/home.html") || httpServletRequest.getRequestURI().startsWith("/_next/")) {
+//        if (httpServletRequest.getRequestURI().startsWith("/modules/next-proxy/") || httpServletRequest.getRequestURI().startsWith("/_next/")) {
+//            //TODO
+//            service(httpServletRequest, (HttpServletResponse) response);
+//            return;
+//        }
         chain.doFilter(request, response);
     }
 

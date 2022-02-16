@@ -18,6 +18,12 @@
 <%--    <meta http-equiv="Refresh" content="0; url=//localhost:3000" />--%>
 </head>
 <body>
-    <p>Redirect to <a href="//localhost:3000">this link</a>.</p>
+<%--<c:redirect url="http://www.google.com"/>--%>
+<%--servletPath :<c:out value="${pageContext.request.servletPath}" />--%>
+<%--requestURI :<c:out value="${pageContext.request.requestURI}" />--%>
+<%--    <p>Redirect to <a href="//localhost:3000">this link</a>.</p>--%>
+<%--<template:area path="content">--%>
+
+<%--</template:area>--%>
 </body>
 </html>
