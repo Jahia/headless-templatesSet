@@ -1,5 +1,6 @@
 <jnt = 'http://www.jahia.org/jahia/nt/1.0'>
 <jmix = 'http://www.jahia.org/jahia/mix/1.0'>
+<j = 'http://www.jahia.org/jahia/1.0'>
 
 //jmix:hasTemplateNode
 // - j:templateName (string,choicelist[templatesNode]) mandatory nofulltext
@@ -9,3 +10,8 @@
  - j:isHomePage (boolean) hidden
  + * (nt:base) = nt:base version
  + * (jmix:navMenuItem)
+
+// [jmix:headlessSite] mixin
+// extends = jnt:virtualsite
+//  - j:headlessHost (string) mandatory nofulltext
+//  - j:headlessFrameworkURLs (string) multiple nofulltext
