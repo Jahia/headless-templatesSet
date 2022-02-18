@@ -11,7 +11,7 @@
  + * (nt:base) = nt:base version
  + * (jmix:navMenuItem)
 
-// [jmix:headlessSite] mixin
-// extends = jnt:virtualsite
-//  - j:headlessHost (string) mandatory nofulltext
+ [jmix:headlessSite] mixin
+ extends = jnt:virtualsite
+  - j:headlessHost (string) nofulltext
 //  - j:headlessFrameworkURLs (string) multiple nofulltext

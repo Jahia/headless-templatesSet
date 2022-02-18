@@ -28,6 +28,7 @@ import org.jahia.services.render.URLResolverFactory;
 import org.jahia.services.sites.JahiaSite;
 import org.jahia.services.sites.JahiaSitesService;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,6 +47,7 @@ import java.io.OutputStream;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -70,11 +72,17 @@ import java.util.stream.Collectors;
 @Component(immediate = true, service = AbstractServletFilter.class)
 public class ProxyServlet extends AbstractServletFilter {
     private static final Logger logger = LoggerFactory.getLogger(ProxyServlet.class);
-    private Map<String, String> proxyMap;
+//    private Map<String, String> proxyMap;
     private List<String> proxyFrameworkURI;
     private JahiaSitesService jahiaSitesService;
     private static final String J_EDITFRAME_URI= "/cms/editframe/default/";
-    private static final String J_CONFIG_PROXY_PROPS_MAP= "headless_proxy.map";
+    //TODO quid /cms/render/live/ ?
+
+    private static final String J_PROPS_HEADLESS_HOST= "j:headlessHost";
+//    private static final String J_PROPS_HEADLESS_FRAMEWORK_URLS ="j:headlessFrameworkURLs";
+    private static final String J_PROPS_HEADLESS_MIXIN ="jmix:headlessSite";
+
+//    private static final String J_CONFIG_PROXY_PROPS_MAP= "headless_proxy.map";
     private static final String J_CONFIG_PROXY_PROPS_FRAMEWORK_URI= "headless_proxy.frameworkURI";
 
     @Reference
@@ -168,10 +176,10 @@ public class ProxyServlet extends AbstractServletFilter {
     @Activate
     public void activate(Map<String, ?> configuration) {
         logger.info("Started ProxyServlet filter from headless templatesSet with hot deploy...");
-        String proxyPropsMap = (String) configuration.get(J_CONFIG_PROXY_PROPS_MAP);
+//        String proxyPropsMap = (String) configuration.get(J_CONFIG_PROXY_PROPS_MAP);
         String proxyPropsFmkURI = (String) configuration.get(J_CONFIG_PROXY_PROPS_FRAMEWORK_URI);
-
-        this.proxyMap = Splitter.on(' ').withKeyValueSeparator(',').split(proxyPropsMap);
+//
+//        this.proxyMap = Splitter.on(' ').withKeyValueSeparator(',').split(proxyPropsMap);
         this.proxyFrameworkURI = Arrays.stream(proxyPropsFmkURI.split(" ")).collect(Collectors.toList());
         setMatchAllUrls(true);
     }
@@ -284,20 +292,6 @@ public class ProxyServlet extends AbstractServletFilter {
 //        targetHost = URIUtils.extractHost(targetUriObj);
 //    }
 
-    protected void setTarget(String tgtUri) throws ServletException {
-//        targetUri = "http://host.docker.internal:3000" ; //getConfigParam(P_TARGET_URI);
-//        targetUri = "http://localhost:3000" ; //getConfigParam(P_TARGET_URI);
-        targetUri = tgtUri ;
-        if (targetUri == null)
-            throw new ServletException(P_TARGET_URI+" is required.");
-        //test it's valid
-        try {
-            targetUriObj = new URI(targetUri);
-        } catch (Exception e) {
-            throw new ServletException("Trying to process targetUri init parameter: "+e,e);
-        }
-        targetHost = URIUtils.extractHost(targetUriObj);
-    }
 
     /**
      * Called from {@link }.
@@ -370,66 +364,77 @@ public class ProxyServlet extends AbstractServletFilter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String requestURI = httpServletRequest.getRequestURI();
-//TODO voir si j'ai access au refer de la requete pour deteriner le node ! et dans ce cas utilise la version avec la mixin
-        if(requestURI.startsWith(J_EDITFRAME_URI)){
+
+        String siteKey = getSiteKey(request);
+        if(siteKey != null && !siteKey.isEmpty()){
             logger.debug("proxy Jahia URI : "+requestURI);
-            URLResolver urlResolver = getUrlResolver(request);
-            String siteKey = urlResolver.getSiteKey();
+            try {
+                JCRSiteNode siteNode = getSiteNode(siteKey);
+                 if(hasMixin(siteNode,J_PROPS_HEADLESS_MIXIN)){
 
-            if(this.proxyMap.containsKey(siteKey)){
-                setTarget(this.proxyMap.get(siteKey));
-                //TODO clean the URI to provide only the page path
-                service(httpServletRequest, (HttpServletResponse) response);
-                return;
+                     String reqTargetUri = getTargeHost(siteNode);
+                     if (reqTargetUri == null)
+                         throw new ServletException(P_TARGET_URI+" is required.");
+                     //test it's valid
+                     try {
+                         targetUriObj = new URI(reqTargetUri);
+                     } catch (Exception e) {
+                         throw new ServletException("Trying to process reqTargetUri parameter: "+e,e);
+                     }
+
+                     httpServletRequest.setAttribute(ATTR_TARGET_URI,reqTargetUri);
+                     httpServletRequest.setAttribute(ATTR_TARGET_HOST,URIUtils.extractHost(targetUriObj));
+                     service(httpServletRequest, (HttpServletResponse) response);
+                     return;
+                 }
+            } catch (RepositoryException e) {
+                e.printStackTrace();
             }
-
-//            //J_HEADLESS_MIXIN
-//            try {
-//                List<JCRSiteNode> siteNodeList = jahiaSitesService.getSitesNodeList();
-//                JCRSiteNode siteNode = jahiaSitesService.getSitesNodeList().stream()                // convert list to stream
-//                        .filter(sNode -> sNode.getSiteKey().equals(urlResolver.getSiteKey()))
-//                        .collect(Collectors.toList()).get(0);
-//
-////                JCRNodeWrapper node = siteNode.getNode(urlResolver.getSiteKey());
-//                String headlessHost = siteNode.getProperty("j:headlessHost").getValue().getString();
-//
-//
-//
-//
-//                logger.debug("headlessHost : "+headlessHost);
-////                JahiaSite site = jahiaSitesService.getSiteByKey(urlResolver.getSiteKey());
-//
-//
-//            } catch (RepositoryException e) {
-//                e.printStackTrace();
-//            }
-//            "headless-templatesSet".equals(jahiaSitesService.getSiteByKey(urlResolver.getSiteKey()).getTemplatePackageName());
-            //If the webprojet is listed as a headless project
-
         }
-        //boolean result = Arrays.stream(alphabet).anyMatch("A"::equals);
-        if(isFrameworkURI(requestURI)) {
-            logger.debug("proxy FrameworkURI : "+requestURI);
-            service(httpServletRequest, (HttpServletResponse) response);
-            return;
-        }
-
 
         chain.doFilter(request, response);
     }
 
-    private URLResolver getUrlResolver(ServletRequest request){
+    private @Nullable String extractSiteKey(String uri){
+        List<String> uriPart = Arrays.stream(uri.split("/")).collect(Collectors.toList());
+        //TODO extract also locale indexOf("sites")-1
+        if(uriPart.contains("sites")){
+            return uriPart.get(uriPart.indexOf("sites")+1);
+        }
+        return null;
+    }
+
+    private @Nullable String getSiteKey(ServletRequest request){
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-        //Try to resolve Jahia URL
-        URLResolver urlResolver = ((URLResolverFactory) SpringContextSingleton
-                .getBean("urlResolverFactory"))
-                .createURLResolver(
-                        httpServletRequest.getPathInfo(),
-                        httpServletRequest.getServerName(),
-                        Constants.EDIT_WORKSPACE,
-                        httpServletRequest
-                );
-        return urlResolver;
+        String requestURI = httpServletRequest.getRequestURI();
+        String referrer = httpServletRequest.getHeader("referer");
+
+        if(requestURI.startsWith(J_EDITFRAME_URI)){
+            return extractSiteKey(requestURI);
+        }
+        if(referrer != null && referrer.contains(J_EDITFRAME_URI) && isFrameworkURI(requestURI)){
+            return extractSiteKey(referrer);
+        }
+        return null;
+    }
+
+    private JCRSiteNode getSiteNode(String siteKey) throws RepositoryException {
+        List<JCRSiteNode> siteNodeList = jahiaSitesService.getSitesNodeList();
+        JCRSiteNode siteNode = jahiaSitesService.getSitesNodeList().stream()                // convert list to stream
+                .filter(sNode -> sNode.getSiteKey().equals(siteKey))
+                .collect(Collectors.toList()).get(0);
+        return siteNode;
+    }
+
+    private String getTargeHost(JCRSiteNode siteNode) throws RepositoryException {
+            return siteNode.getProperty(J_PROPS_HEADLESS_HOST).getValue().getString();
+    }
+
+    private boolean hasMixin(@NotNull JCRSiteNode siteNode, String mixin) throws RepositoryException {
+        List<String> siteMixins = Arrays.stream(siteNode.getMixinNodeTypes())
+                .map(value -> value.getName() )
+                .collect(Collectors.toList());
+        return siteMixins.contains(mixin);
     }
 
     private boolean isFrameworkURI(String requestURI){
@@ -437,22 +442,31 @@ public class ProxyServlet extends AbstractServletFilter {
                 .filter(uri -> requestURI.startsWith(uri))
                 .collect(Collectors.toList()).isEmpty();
     }
-
-//    private boolean hasMixin(@NotNull JCRSiteNode siteNode, String mixin) throws RepositoryException {
-//        List<String> siteMixins = Arrays.stream(siteNode.getMixinNodeTypes())
-//                .map(value -> value.getName() )
-//                .collect(Collectors.toList());
-//        return siteMixins.contains(mixin);
-//    }
-//
-//    private boolean isFrameworkURL(@NotNull JCRSiteNode siteNode, @NotNull String requestURI) throws RepositoryException {
+//    private boolean isFrameworkURI(@NotNull JCRSiteNode siteNode, @NotNull String requestURI) throws RepositoryException {
 //        String [] uri = requestURI.split("/");
 //        List<String> headlessFrameworkURLs = Arrays.stream(
-//                        siteNode.getProperty("j:headlessFrameworkURLs").getValues())
+//                        siteNode.getProperty(J_PROPS_HEADLESS_FRAMEWORK_URLS).getValues())
 //                .map(value -> value.toString() )
 //                .collect(Collectors.toList());
 //        return headlessFrameworkURLs.contains(uri[1]);
 //    }
+
+
+//    private URLResolver getUrlResolver(ServletRequest request){
+//        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+//        //Try to resolve Jahia URL
+//        URLResolver urlResolver = ((URLResolverFactory) SpringContextSingleton
+//                .getBean("urlResolverFactory"))
+//                .createURLResolver(
+//                        httpServletRequest.getPathInfo(),
+//                        httpServletRequest.getServerName(),
+//                        Constants.EDIT_WORKSPACE,
+//                        httpServletRequest
+//                );
+//        return urlResolver;
+//    }
+
+
 
 
     protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)

@@ -5,6 +5,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="jcr" uri="http://www.jahia.org/tags/jcr" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%--@elvariable id="currentNode" type="org.jahia.services.content.JCRNodeWrapper"--%>
 <%--@elvariable id="out" type="java.io.PrintWriter"--%>
 <%--@elvariable id="script" type="org.jahia.services.render.scripting.Script"--%>
@@ -18,12 +19,8 @@
 <%--    <meta http-equiv="Refresh" content="0; url=//localhost:3000" />--%>
 </head>
 <body>
-<%--<c:redirect url="http://www.google.com"/>--%>
-<%--servletPath :<c:out value="${pageContext.request.servletPath}" />--%>
-<%--requestURI :<c:out value="${pageContext.request.requestURI}" />--%>
-<%--    <p>Redirect to <a href="//localhost:3000">this link</a>.</p>--%>
-<%--<template:area path="content">--%>
 
-<%--</template:area>--%>
+<h1><fmt:message key="label.config.title"/></h1>
+<p><fmt:message key="label.config.desc"/></p>
 </body>
 </html>
