@@ -75,7 +75,7 @@ public class ProxyServlet extends AbstractServletFilter {
 //    private Map<String, String> proxyMap;
     private List<String> proxyFrameworkURI;
     private JahiaSitesService jahiaSitesService;
-    private static final String J_EDITFRAME_URI= "/cms/editframe/default/";
+    private static final String J_EDITFRAME_URI= "/cms/editframe/default";
     //TODO quid /cms/render/live/ ?
 
     private static final String J_PROPS_HEADLESS_HOST= "j:headlessHost";
@@ -84,6 +84,8 @@ public class ProxyServlet extends AbstractServletFilter {
 
 //    private static final String J_CONFIG_PROXY_PROPS_MAP= "headless_proxy.map";
     private static final String J_CONFIG_PROXY_PROPS_FRAMEWORK_URI= "headless_proxy.frameworkURI";
+
+    private static final String J_COOKIE_SITE_NAME= "headlessSiteKey";
 
     @Reference
     public void setJahiaSitesService(JahiaSitesService jahiaSitesService) {
@@ -156,6 +158,8 @@ public class ProxyServlet extends AbstractServletFilter {
     protected HttpHost targetHost;//URIUtils.extractHost(targetUriObj);
 
     private HttpClient proxyClient;
+
+    protected Map<String,String> siteInfo;
 
     protected String getTargetUri(HttpServletRequest servletRequest) {
         return (String) servletRequest.getAttribute(ATTR_TARGET_URI);
@@ -365,12 +369,19 @@ public class ProxyServlet extends AbstractServletFilter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String requestURI = httpServletRequest.getRequestURI();
 
-        String siteKey = getSiteKey(request);
-        if(siteKey != null && !siteKey.isEmpty()){
+//        String siteKey = getSiteKey(request);
+        Map<String,String> siteInfo = getSiteInfo(request);
+//        if(siteKey != null && !siteKey.isEmpty()){
+        if(siteInfo != null && !siteInfo.isEmpty()){
+            this.siteInfo = siteInfo;
             logger.debug("proxy Jahia URI : "+requestURI);
             try {
-                JCRSiteNode siteNode = getSiteNode(siteKey);
+                JCRSiteNode siteNode = getSiteNode(siteInfo.get("siteKey"));
                  if(hasMixin(siteNode,J_PROPS_HEADLESS_MIXIN)){
+                     //rewrite the URL to be used by graphQL
+                     if(requestURI.startsWith(J_EDITFRAME_URI)){
+
+                     }
 
                      String reqTargetUri = getTargeHost(siteNode);
                      if (reqTargetUri == null)
@@ -395,28 +406,81 @@ public class ProxyServlet extends AbstractServletFilter {
         chain.doFilter(request, response);
     }
 
-    private @Nullable String extractSiteKey(String uri){
+
+//    private @Nullable String extractSiteKey(String uri){
+//        List<String> uriPart = Arrays.stream(uri.split("/")).collect(Collectors.toList());
+//        //TODO extract also locale indexOf("sites")-1
+//        if(uriPart.contains("sites")){
+//            return uriPart.get(uriPart.indexOf("sites")+1);
+//        }
+//        return null;
+//    }
+
+    private @Nullable Map<String,String> extractSiteInfo(String uri){
         List<String> uriPart = Arrays.stream(uri.split("/")).collect(Collectors.toList());
-        //TODO extract also locale indexOf("sites")-1
+        Map<String,String> ret = new HashMap<>();
+
         if(uriPart.contains("sites")){
-            return uriPart.get(uriPart.indexOf("sites")+1);
+            String siteKey = uriPart.get(uriPart.indexOf("sites")+1);
+            String pagePath = uri.substring(uri.indexOf(siteKey)+siteKey.length(),uri.indexOf(".html"));
+
+            ret.put("siteKey",siteKey);
+            ret.put("locale",uriPart.get(uriPart.indexOf("sites")-1));
+            ret.put("pagePath",pagePath);
+
+            return ret;
         }
         return null;
     }
 
-    private @Nullable String getSiteKey(ServletRequest request){
+    private @Nullable Map<String,String> getSiteInfo(ServletRequest request){
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+//        Cookie cookieSiteKey = Arrays.stream(httpServletRequest.getCookies())                // convert list to stream
+//                .filter(cookie -> cookie.getName().equals(J_COOKIE_SITE_NAME))
+//                .collect(Collectors.toList()).get(0);
+
         String requestURI = httpServletRequest.getRequestURI();
         String referrer = httpServletRequest.getHeader("referer");
 
         if(requestURI.startsWith(J_EDITFRAME_URI)){
-            return extractSiteKey(requestURI);
+            Map<String,String> siteInfo = extractSiteInfo(requestURI);
+//            if(cookieSiteKey != null && !siteKey.equals(cookieSiteKey.getValue())){
+//                //New URL
+//            }
+
+            return siteInfo;
         }
         if(referrer != null && referrer.contains(J_EDITFRAME_URI) && isFrameworkURI(requestURI)){
-            return extractSiteKey(referrer);
+            return extractSiteInfo(referrer);
         }
         return null;
     }
+
+//    private @Nullable String getSiteKey(ServletRequest request){
+//        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+//
+////        Cookie cookieSiteKey = Arrays.stream(httpServletRequest.getCookies())                // convert list to stream
+////                .filter(cookie -> cookie.getName().equals(J_COOKIE_SITE_NAME))
+////                .collect(Collectors.toList()).get(0);
+//
+//        String requestURI = httpServletRequest.getRequestURI();
+//        String referrer = httpServletRequest.getHeader("referer");
+//
+//        if(requestURI.startsWith(J_EDITFRAME_URI)){
+//            String siteKey = extractSiteKey(requestURI);
+////            if(cookieSiteKey != null && !siteKey.equals(cookieSiteKey.getValue())){
+////                //New URL
+////            }
+//
+//            return siteKey;
+//        }
+//        if(referrer != null && referrer.contains(J_EDITFRAME_URI) && isFrameworkURI(requestURI)){
+//            return extractSiteKey(referrer);
+//        }
+//        return null;
+//    }
+
 
     private JCRSiteNode getSiteNode(String siteKey) throws RepositoryException {
         List<JCRSiteNode> siteNodeList = jahiaSitesService.getSitesNodeList();
@@ -882,9 +946,15 @@ public class ProxyServlet extends AbstractServletFilter {
      */
     protected String rewritePathInfoFromRequest(HttpServletRequest servletRequest) {
         String requestURI = servletRequest.getRequestURI();
-        if (requestURI.startsWith("/modules/next-proxy")) {
-            requestURI = requestURI.substring("/modules/next-proxy".length());
+
+        if (requestURI.startsWith(J_EDITFRAME_URI)) {
+            String path = J_EDITFRAME_URI+"/"+this.siteInfo.get("locale");
+            requestURI = requestURI.substring(path.length(),requestURI.length()-5);
         }
+
+//        if (requestURI.startsWith("/modules/next-proxy")) {
+//            requestURI = requestURI.substring("/modules/next-proxy".length());
+//        }
         return requestURI;
     }
 
