@@ -937,7 +937,8 @@ public class ProxyServlet extends AbstractServletFilter {
     }
 
     protected String rewriteQueryStringFromRequest(HttpServletRequest servletRequest, String queryString) {
-        return queryString;
+        return "";//remove query string params
+//        return queryString;
     }
 
     /**
