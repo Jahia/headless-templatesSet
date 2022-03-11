@@ -80,16 +80,19 @@ public class ProxyServlet extends AbstractServletFilter {
     //TODO quid /cms/render/live/ ?
 
     private static final String J_PROPS_HEADLESS_HOST= "j:headlessHost";
+    private static final String J_PROPS_HEADLESS_PREVIEW_PATH= "j:headlessPreviewURL";
 //    private static final String J_PROPS_HEADLESS_FRAMEWORK_URLS ="j:headlessFrameworkURLs";
     private static final String J_PROPS_HEADLESS_MIXIN ="jmix:headlessSite";
 
 //    private static final String J_CONFIG_PROXY_PROPS_MAP= "headless_proxy.map";
     private static final String J_CONFIG_PROXY_PROPS_FRAMEWORK_URI= "headless_proxy.frameworkURI";
 
-    private static final String J_COOKIE_SITE_NAME= "__prerender_bypass";
+
 
     //this should be a params from headless part
-    private static final String NEXT_PREVIEW_COOKIE_NAME= "headlessSiteKey";
+//    private static final String J_COOKIE_SITE_NAME= "!Proxy!ServletName__prerender_bypass";
+    private static final String NEXT_PREVIEW_COOKIE_NAME= "!Proxy!ServletName__prerender_bypass";
+//    private static final String NEXT_PREVIEW_COOKIE_NAME= "__prerender_bypass";
 
     @Reference
     public void setJahiaSitesService(JahiaSitesService jahiaSitesService) {
@@ -164,6 +167,7 @@ public class ProxyServlet extends AbstractServletFilter {
     private HttpClient proxyClient;
 
     protected Map<String,String> siteInfo;
+    protected String previewPath;
 
     protected String getTargetUri(HttpServletRequest servletRequest) {
         return (String) servletRequest.getAttribute(ATTR_TARGET_URI);
@@ -380,10 +384,8 @@ public class ProxyServlet extends AbstractServletFilter {
             this.siteInfo = siteInfo;
 
             //check if cookie preview is there
-            List<Cookie> cookieNextPreviewList = Arrays.stream(httpServletRequest.getCookies())                // convert list to stream
-                    .filter(cookie -> cookie.getName().equals(NEXT_PREVIEW_COOKIE_NAME))
-                    .collect(Collectors.toList());
-            boolean enablePreview = cookieNextPreviewList.isEmpty();
+
+//            enablePreview = cookieNextPreviewList.isEmpty();
 
 
             logger.debug("proxy Jahia URI : "+requestURI);
@@ -391,11 +393,17 @@ public class ProxyServlet extends AbstractServletFilter {
                 JCRSiteNode siteNode = getSiteNode(siteInfo.get("siteKey"));
                  if(hasMixin(siteNode,J_PROPS_HEADLESS_MIXIN)){
                      //rewrite the URL to be used by graphQL
-                     if(requestURI.startsWith(J_EDITFRAME_URI)){
+//                     if(requestURI.startsWith(J_EDITFRAME_URI)){}
 
-                     }
+                     previewPath = getTargetPreviewPath(siteNode,request);
 
-                     String reqTargetUri = getTargeHost(siteNode);
+//                     if(cookieNextPreviewList.isEmpty()) { //enablePreview
+//                         previewPath = getTargetPreviewPath(siteNode);
+//                     }else{
+//                         previewPath=null;
+//                     }
+
+                     String reqTargetUri = getTargetHost(siteNode);
                      if (reqTargetUri == null)
                          throw new ServletException(P_TARGET_URI+" is required.");
                      //test it's valid
@@ -435,7 +443,11 @@ public class ProxyServlet extends AbstractServletFilter {
         if(uriPart.contains("sites")){
             logger.info("uriPart :"+uriPart);
             String siteKey = uriPart.get(uriPart.indexOf("sites")+1);
-            String pagePath = uri.substring(uri.indexOf(siteKey)+siteKey.length(),uri.indexOf(".html"));
+            int endIndex = uri.indexOf(".html")!=-1 ?
+                    uri.indexOf(".html") :
+                    uri.indexOf("?")!=-1 ? uri.indexOf("?") : uri.length()-1;
+
+            String pagePath = uri.substring(uri.indexOf(siteKey)+siteKey.length(),endIndex);
 
             ret.put("siteKey",siteKey);
             ret.put("locale",uriPart.get(uriPart.indexOf("sites")-1));
@@ -478,30 +490,6 @@ public class ProxyServlet extends AbstractServletFilter {
         return null;
     }
 
-//    private @Nullable String getSiteKey(ServletRequest request){
-//        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-//
-////        Cookie cookieSiteKey = Arrays.stream(httpServletRequest.getCookies())                // convert list to stream
-////                .filter(cookie -> cookie.getName().equals(J_COOKIE_SITE_NAME))
-////                .collect(Collectors.toList()).get(0);
-//
-//        String requestURI = httpServletRequest.getRequestURI();
-//        String referrer = httpServletRequest.getHeader("referer");
-//
-//        if(requestURI.startsWith(J_EDITFRAME_URI)){
-//            String siteKey = extractSiteKey(requestURI);
-////            if(cookieSiteKey != null && !siteKey.equals(cookieSiteKey.getValue())){
-////                //New URL
-////            }
-//
-//            return siteKey;
-//        }
-//        if(referrer != null && referrer.contains(J_EDITFRAME_URI) && isFrameworkURI(requestURI)){
-//            return extractSiteKey(referrer);
-//        }
-//        return null;
-//    }
-
 
     private JCRSiteNode getSiteNode(String siteKey) throws RepositoryException {
         List<JCRSiteNode> siteNodeList = jahiaSitesService.getSitesNodeList();
@@ -511,9 +499,25 @@ public class ProxyServlet extends AbstractServletFilter {
         return siteNode;
     }
 
-    private String getTargeHost(JCRSiteNode siteNode) throws RepositoryException {
+    private String getTargetHost(JCRSiteNode siteNode) throws RepositoryException {
             return siteNode.getProperty(J_PROPS_HEADLESS_HOST).getValue().getString();
     }
+
+    private @Nullable String getTargetPreviewPath(JCRSiteNode siteNode,ServletRequest request) throws RepositoryException {
+        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+        String requestURI = httpServletRequest.getRequestURI();
+        if(requestURI.startsWith(J_EDITFRAME_URI) || requestURI.startsWith(J_PREVIEW_URI)){
+            List<Cookie> cookieNextPreviewList = Arrays.stream(httpServletRequest.getCookies())                // convert list to stream
+                    .filter(cookie -> cookie.getName().equals(NEXT_PREVIEW_COOKIE_NAME))
+                    .collect(Collectors.toList());
+
+            if(cookieNextPreviewList.isEmpty())
+                return siteNode.getProperty(J_PROPS_HEADLESS_PREVIEW_PATH).getValue().getString();
+        }
+        return null;
+    }
+
+
 
     private boolean hasMixin(@NotNull JCRSiteNode siteNode, String mixin) throws RepositoryException {
         List<String> siteMixins = Arrays.stream(siteNode.getMixinNodeTypes())
@@ -875,6 +879,7 @@ public class ProxyServlet extends AbstractServletFilter {
 
     /** The string prefixing rewritten cookies. */
     protected String getCookieNamePrefix(String name) {
+//        return "";//disable prefix, could check if cookie name equals a Next preview cookie or configure cookie name from Site...
         return "!Proxy!ServletName";
     }
 
@@ -958,8 +963,24 @@ public class ProxyServlet extends AbstractServletFilter {
     }
 
     protected String rewriteQueryStringFromRequest(HttpServletRequest servletRequest, String queryString) {
-        //TODO add the edit=true or not
-        return "";//remove query string params
+        String rewritedQueryString="";
+
+
+        String requestURI = servletRequest.getRequestURI();
+
+        if (requestURI.startsWith(J_EDITFRAME_URI)) {
+            rewritedQueryString = "edit=true";
+
+            if(this.previewPath != null){
+                String path = J_EDITFRAME_URI+"/"+this.siteInfo.get("locale");
+                rewritedQueryString += "&path="+requestURI.substring(path.length(),requestURI.length()-5);
+            }
+
+
+        }
+        return rewritedQueryString;//TODO add default queryString ?
+
+//        return "";//remove query string params
 //        return queryString;
     }
 
@@ -968,10 +989,20 @@ public class ProxyServlet extends AbstractServletFilter {
      * Useful when url-pattern of servlet-mapping (web.xml) requires manipulation.
      */
     protected String rewritePathInfoFromRequest(HttpServletRequest servletRequest) {
+
+        if(this.previewPath != null){
+            return this.previewPath;
+        }
+
         String requestURI = servletRequest.getRequestURI();
 
         if (requestURI.startsWith(J_EDITFRAME_URI)) {
             String path = J_EDITFRAME_URI+"/"+this.siteInfo.get("locale");
+            requestURI = requestURI.substring(path.length(),requestURI.length()-5);
+        }
+
+        if (requestURI.startsWith(J_PREVIEW_URI)) {
+            String path = J_PREVIEW_URI+"/"+this.siteInfo.get("locale");
             requestURI = requestURI.substring(path.length(),requestURI.length()-5);
         }
 
