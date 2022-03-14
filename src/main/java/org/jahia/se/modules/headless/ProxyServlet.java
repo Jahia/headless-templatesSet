@@ -93,7 +93,7 @@ public class ProxyServlet extends AbstractServletFilter {
     //this should be a params from headless part
 //    private static final String J_COOKIE_SITE_NAME= "!Proxy!ServletName__prerender_bypass";
     private static final String NEXT_PREVIEW_COOKIE_NAME= "!Proxy!ServletName__prerender_bypass";
-//    private static final String NEXT_PREVIEW_COOKIE_NAME= "__prerender_bypass";
+
 
     @Reference
     public void setJahiaSitesService(JahiaSitesService jahiaSitesService) {
@@ -166,8 +166,6 @@ public class ProxyServlet extends AbstractServletFilter {
     protected HttpHost targetHost;//URIUtils.extractHost(targetUriObj);
 
     private HttpClient proxyClient;
-
-//    protected Map<String,String> siteInfo;
 
     protected String getTargetUri(HttpServletRequest servletRequest) {
         return (String) servletRequest.getAttribute(ATTR_TARGET_URI);
@@ -377,24 +375,15 @@ public class ProxyServlet extends AbstractServletFilter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String requestURI = httpServletRequest.getRequestURI();
 
-//        String siteKey = getSiteKey(request);
         Map<String,String> siteInfo = getSiteInfo(request);
-//        if(siteKey != null && !siteKey.isEmpty()){
+
         if(siteInfo != null && !siteInfo.isEmpty()){
             httpServletRequest.setAttribute("siteInfo",siteInfo);
-//            this.siteInfo = siteInfo;
-
-            //check if cookie preview is there
-
-//            enablePreview = cookieNextPreviewList.isEmpty();
-
 
             logger.debug("proxy Jahia URI : "+requestURI);
             try {
                 JCRSiteNode siteNode = getSiteNode(siteInfo.get("siteKey"));
                  if(hasMixin(siteNode,J_PROPS_HEADLESS_MIXIN)){
-                     //rewrite the URL to be used by graphQL
-//                     if(requestURI.startsWith(J_EDITFRAME_URI)){}
 
                      httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_URI,getTargetPreviewPath(siteNode,request));
 
@@ -420,16 +409,6 @@ public class ProxyServlet extends AbstractServletFilter {
 
         chain.doFilter(request, response);
     }
-
-
-//    private @Nullable String extractSiteKey(String uri){
-//        List<String> uriPart = Arrays.stream(uri.split("/")).collect(Collectors.toList());
-//        //TODO extract also locale indexOf("sites")-1
-//        if(uriPart.contains("sites")){
-//            return uriPart.get(uriPart.indexOf("sites")+1);
-//        }
-//        return null;
-//    }
 
     private @Nullable Map<String,String> extractSiteInfo(String uri){
         List<String> uriPart = Arrays.stream(uri.split("/")).collect(Collectors.toList());
@@ -956,11 +935,11 @@ public class ProxyServlet extends AbstractServletFilter {
         }
         return uri.toString();
     }
+
     private String getProxyPath(Map<String,String> siteInfo){
         //TODO maybe return also : siteInfo.get("locale")/sites
         return "/sites/"+siteInfo.get("siteKey")+siteInfo.get("pagePath");
     }
-
 
     protected String rewriteQueryStringFromRequest(HttpServletRequest servletRequest, String queryString) {
         String rewritedQueryString= queryString != null ? queryString: "";
@@ -1002,20 +981,6 @@ public class ProxyServlet extends AbstractServletFilter {
             requestURI = getProxyPath(siteInfo);
         }
 
-
-//        if (requestURI.startsWith(J_EDITFRAME_URI)) {
-//            String path = J_EDITFRAME_URI+"/"+this.siteInfo.get("locale");
-//            requestURI = requestURI.substring(path.length(),requestURI.length()-5);
-//        }
-//
-//        if (requestURI.startsWith(J_PREVIEW_URI)) {
-//            String path = J_PREVIEW_URI+"/"+this.siteInfo.get("locale");
-//            requestURI = requestURI.substring(path.length(),requestURI.length()-5);
-//        }
-
-//        if (requestURI.startsWith("/modules/next-proxy")) {
-//            requestURI = requestURI.substring("/modules/next-proxy".length());
-//        }
         return requestURI;
     }
 
