@@ -77,6 +77,7 @@ public class ProxyServlet extends AbstractServletFilter {
     private JahiaSitesService jahiaSitesService;
     private static final String J_EDITFRAME_URI= "/cms/editframe/default";
     private static final String J_PREVIEW_URI= "/cms/render/default";
+    private static final String ATTR_HEADLESS_PREVIEW_URI = "previewUri";
     //TODO quid /cms/render/live/ ?
 
     private static final String J_PROPS_HEADLESS_HOST= "j:headlessHost";
@@ -166,8 +167,7 @@ public class ProxyServlet extends AbstractServletFilter {
 
     private HttpClient proxyClient;
 
-    protected Map<String,String> siteInfo;
-    protected String previewPath;
+//    protected Map<String,String> siteInfo;
 
     protected String getTargetUri(HttpServletRequest servletRequest) {
         return (String) servletRequest.getAttribute(ATTR_TARGET_URI);
@@ -381,7 +381,8 @@ public class ProxyServlet extends AbstractServletFilter {
         Map<String,String> siteInfo = getSiteInfo(request);
 //        if(siteKey != null && !siteKey.isEmpty()){
         if(siteInfo != null && !siteInfo.isEmpty()){
-            this.siteInfo = siteInfo;
+            httpServletRequest.setAttribute("siteInfo",siteInfo);
+//            this.siteInfo = siteInfo;
 
             //check if cookie preview is there
 
@@ -395,13 +396,7 @@ public class ProxyServlet extends AbstractServletFilter {
                      //rewrite the URL to be used by graphQL
 //                     if(requestURI.startsWith(J_EDITFRAME_URI)){}
 
-                     previewPath = getTargetPreviewPath(siteNode,request);
-
-//                     if(cookieNextPreviewList.isEmpty()) { //enablePreview
-//                         previewPath = getTargetPreviewPath(siteNode);
-//                     }else{
-//                         previewPath=null;
-//                     }
+                     httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_URI,getTargetPreviewPath(siteNode,request));
 
                      String reqTargetUri = getTargetHost(siteNode);
                      if (reqTargetUri == null)
@@ -961,26 +956,33 @@ public class ProxyServlet extends AbstractServletFilter {
         }
         return uri.toString();
     }
+    private String getProxyPath(Map<String,String> siteInfo){
+        //TODO maybe return also : siteInfo.get("locale")/sites
+        return "/sites/"+siteInfo.get("siteKey")+siteInfo.get("pagePath");
+    }
+
 
     protected String rewriteQueryStringFromRequest(HttpServletRequest servletRequest, String queryString) {
-        String rewritedQueryString="";
-
+        String rewritedQueryString= queryString != null ? queryString: "";
 
         String requestURI = servletRequest.getRequestURI();
+        String previewUri =  (String) servletRequest.getAttribute(ATTR_HEADLESS_PREVIEW_URI);
+        Map<String,String> siteInfo = (Map<String,String>) servletRequest.getAttribute("siteInfo");
 
-        if (requestURI.startsWith(J_EDITFRAME_URI)) {
-            rewritedQueryString = "edit=true";
-
-            if(this.previewPath != null){
-                String path = J_EDITFRAME_URI+"/"+this.siteInfo.get("locale");
-                rewritedQueryString += "&path="+requestURI.substring(path.length(),requestURI.length()-5);
-            }
-
-
+        if (requestURI.startsWith(J_EDITFRAME_URI)){
+            if(rewritedQueryString != null && !rewritedQueryString.isEmpty())
+                rewritedQueryString += "&";
+            rewritedQueryString += "edit=true";
         }
-        return rewritedQueryString;//TODO add default queryString ?
 
-//        return "";//remove query string params
+        if(previewUri != null){
+            if(rewritedQueryString != null && !rewritedQueryString.isEmpty())
+                rewritedQueryString += "&";
+            rewritedQueryString += "path="+getProxyPath(siteInfo);
+        }
+
+        return rewritedQueryString;
+
 //        return queryString;
     }
 
@@ -989,22 +991,27 @@ public class ProxyServlet extends AbstractServletFilter {
      * Useful when url-pattern of servlet-mapping (web.xml) requires manipulation.
      */
     protected String rewritePathInfoFromRequest(HttpServletRequest servletRequest) {
-
-        if(this.previewPath != null){
-            return this.previewPath;
+        String previewUri =  (String) servletRequest.getAttribute(ATTR_HEADLESS_PREVIEW_URI);
+        if(previewUri != null){
+            return previewUri;
         }
 
         String requestURI = servletRequest.getRequestURI();
-
-        if (requestURI.startsWith(J_EDITFRAME_URI)) {
-            String path = J_EDITFRAME_URI+"/"+this.siteInfo.get("locale");
-            requestURI = requestURI.substring(path.length(),requestURI.length()-5);
+        if (requestURI.startsWith(J_EDITFRAME_URI) || requestURI.startsWith(J_PREVIEW_URI)){
+            Map<String,String> siteInfo = (Map<String,String>) servletRequest.getAttribute("siteInfo");
+            requestURI = getProxyPath(siteInfo);
         }
 
-        if (requestURI.startsWith(J_PREVIEW_URI)) {
-            String path = J_PREVIEW_URI+"/"+this.siteInfo.get("locale");
-            requestURI = requestURI.substring(path.length(),requestURI.length()-5);
-        }
+
+//        if (requestURI.startsWith(J_EDITFRAME_URI)) {
+//            String path = J_EDITFRAME_URI+"/"+this.siteInfo.get("locale");
+//            requestURI = requestURI.substring(path.length(),requestURI.length()-5);
+//        }
+//
+//        if (requestURI.startsWith(J_PREVIEW_URI)) {
+//            String path = J_PREVIEW_URI+"/"+this.siteInfo.get("locale");
+//            requestURI = requestURI.substring(path.length(),requestURI.length()-5);
+//        }
 
 //        if (requestURI.startsWith("/modules/next-proxy")) {
 //            requestURI = requestURI.substring("/modules/next-proxy".length());
