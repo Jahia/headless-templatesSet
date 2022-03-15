@@ -414,14 +414,23 @@ public class ProxyServlet extends AbstractServletFilter {
         List<String> uriPart = Arrays.stream(uri.split("/")).collect(Collectors.toList());
         Map<String,String> ret = new HashMap<>();
 
-        if(uriPart.contains("sites")){
+        //clean the list and remove the first element which is empty
+        if(uriPart.get(0).isEmpty())
+            uriPart.remove(0);
+
+        //jahia technical url like <siteKey>.manageSiteRoles.html are used be sure pagePath exist
+        if(uriPart.contains("sites") && (uriPart.indexOf("sites")+2 <= uriPart.toArray().length-1)){
             logger.info("uriPart :"+uriPart);
+
             String siteKey = uriPart.get(uriPart.indexOf("sites")+1);
             int endIndex = uri.indexOf(".html")!=-1 ?
                     uri.indexOf(".html") :
                     uri.indexOf("?")!=-1 ? uri.indexOf("?") : uri.length()-1;
+            int startIndex = uri.indexOf(siteKey)+siteKey.length();
+            if(startIndex >= endIndex)
+                return null;
 
-            String pagePath = uri.substring(uri.indexOf(siteKey)+siteKey.length(),endIndex);
+            String pagePath = uri.substring(startIndex,endIndex);
 
             ret.put("siteKey",siteKey);
             ret.put("locale",uriPart.get(uriPart.indexOf("sites")-1));
