@@ -947,26 +947,30 @@ public class ProxyServlet extends AbstractServletFilter {
 
     private String getProxyPath(Map<String,String> siteInfo){
         //TODO maybe return also : siteInfo.get("locale")/sites
+//        return "/"+siteInfo.get("locale")+"/sites/"+siteInfo.get("siteKey")+siteInfo.get("pagePath");
         return "/sites/"+siteInfo.get("siteKey")+siteInfo.get("pagePath");
     }
 
     protected String rewriteQueryStringFromRequest(HttpServletRequest servletRequest, String queryString) {
-        String rewritedQueryString= queryString != null ? queryString: "";
-
         String requestURI = servletRequest.getRequestURI();
         String previewUri =  (String) servletRequest.getAttribute(ATTR_HEADLESS_PREVIEW_URI);
         Map<String,String> siteInfo = (Map<String,String>) servletRequest.getAttribute("siteInfo");
 
+        String rewritedQueryString= queryString != null ? queryString: "";
+        if(!rewritedQueryString.isEmpty())
+            rewritedQueryString += "&";
+        rewritedQueryString += "locale="+siteInfo.get("locale");
+
         if (requestURI.startsWith(J_EDITFRAME_URI)){
-            if(rewritedQueryString != null && !rewritedQueryString.isEmpty())
-                rewritedQueryString += "&";
-            rewritedQueryString += "edit=true";
+//            if(!rewritedQueryString.isEmpty())
+//                rewritedQueryString += "&";
+            rewritedQueryString += "&edit=true";
         }
 
         if(previewUri != null){
-            if(rewritedQueryString != null && !rewritedQueryString.isEmpty())
-                rewritedQueryString += "&";
-            rewritedQueryString += "path="+getProxyPath(siteInfo);
+//            if(rewritedQueryString != null && !rewritedQueryString.isEmpty())
+//                rewritedQueryString += "&";
+            rewritedQueryString += "&path="+getProxyPath(siteInfo);
         }
 
         return rewritedQueryString;
