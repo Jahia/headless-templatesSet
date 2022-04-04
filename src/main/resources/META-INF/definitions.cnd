@@ -16,4 +16,5 @@
  extends = jnt:virtualsite
   - j:headlessHost (string) nofulltext
   - j:headlessPreviewURL (string) nofulltext
+  - j:headlessPreviewSecret (string) nofulltext
 //  - j:headlessFrameworkURLs (string) multiple nofulltext

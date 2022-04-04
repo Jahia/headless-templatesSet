@@ -78,10 +78,12 @@ public class ProxyServlet extends AbstractServletFilter {
     private static final String J_EDITFRAME_URI= "/cms/editframe/default";
     private static final String J_PREVIEW_URI= "/cms/render/default";
     private static final String ATTR_HEADLESS_PREVIEW_URI = "previewUri";
+    private static final String ATTR_HEADLESS_PREVIEW_SECRET = "previewSecret";
     //TODO quid /cms/render/live/ ?
 
     private static final String J_PROPS_HEADLESS_HOST= "j:headlessHost";
     private static final String J_PROPS_HEADLESS_PREVIEW_PATH= "j:headlessPreviewURL";
+    private static final String J_PROPS_HEADLESS_PREVIEW_SECRET= "j:headlessPreviewSecret";
 //    private static final String J_PROPS_HEADLESS_FRAMEWORK_URLS ="j:headlessFrameworkURLs";
     private static final String J_PROPS_HEADLESS_MIXIN ="jmix:headlessSite";
 
@@ -386,6 +388,7 @@ public class ProxyServlet extends AbstractServletFilter {
                  if(hasMixin(siteNode,J_PROPS_HEADLESS_MIXIN)){
 
                      httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_URI,getTargetPreviewPath(siteNode,request));
+                     httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_SECRET,getTargetPreviewSecret(siteNode));
 
                      String reqTargetUri = getTargetHost(siteNode);
                      if (reqTargetUri == null)
@@ -486,6 +489,10 @@ public class ProxyServlet extends AbstractServletFilter {
             return siteNode.getProperty(J_PROPS_HEADLESS_HOST).getValue().getString();
     }
 
+    private @Nullable String getTargetPreviewSecret(JCRSiteNode siteNode) throws RepositoryException {
+        return siteNode.getProperty(J_PROPS_HEADLESS_PREVIEW_SECRET).getValue().getString();
+    }
+
     private @Nullable String getTargetPreviewPath(JCRSiteNode siteNode,ServletRequest request) throws RepositoryException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String requestURI = httpServletRequest.getRequestURI();
@@ -499,6 +506,8 @@ public class ProxyServlet extends AbstractServletFilter {
         }
         return null;
     }
+
+
 
 
 
@@ -954,7 +963,9 @@ public class ProxyServlet extends AbstractServletFilter {
     protected String rewriteQueryStringFromRequest(HttpServletRequest servletRequest, String queryString) {
         String requestURI = servletRequest.getRequestURI();
         String previewUri =  (String) servletRequest.getAttribute(ATTR_HEADLESS_PREVIEW_URI);
+        String previewSecret = (String) servletRequest.getAttribute(ATTR_HEADLESS_PREVIEW_SECRET);
         Map<String,String> siteInfo = (Map<String,String>) servletRequest.getAttribute("siteInfo");
+
 
         String rewritedQueryString= queryString != null ? queryString: "";
         if(!rewritedQueryString.isEmpty())
@@ -962,16 +973,17 @@ public class ProxyServlet extends AbstractServletFilter {
         rewritedQueryString += "locale="+siteInfo.get("locale");
 
         if (requestURI.startsWith(J_EDITFRAME_URI)){
-//            if(!rewritedQueryString.isEmpty())
-//                rewritedQueryString += "&";
             rewritedQueryString += "&edit=true";
         }
 
         if(previewUri != null){
-//            if(rewritedQueryString != null && !rewritedQueryString.isEmpty())
-//                rewritedQueryString += "&";
             rewritedQueryString += "&path="+getProxyPath(siteInfo);
+            if(previewSecret != null){
+                rewritedQueryString += "&secret="+previewSecret;
+            }
         }
+
+
 
         return rewritedQueryString;
 
