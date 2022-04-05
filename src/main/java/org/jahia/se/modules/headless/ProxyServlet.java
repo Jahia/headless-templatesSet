@@ -29,6 +29,8 @@ import org.jahia.services.sites.JahiaSite;
 import org.jahia.services.sites.JahiaSitesService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -79,6 +81,7 @@ public class ProxyServlet extends AbstractServletFilter {
     private static final String J_PREVIEW_URI= "/cms/render/default";
     private static final String ATTR_HEADLESS_PREVIEW_URI = "previewUri";
     private static final String ATTR_HEADLESS_PREVIEW_SECRET = "previewSecret";
+    private static final String ATTR_HEADLESS_JCONTENT_COOKIE = "__jContent_preview_ctx";
     //TODO quid /cms/render/live/ ?
 
     private static final String J_PROPS_HEADLESS_HOST= "j:headlessHost";
@@ -385,27 +388,38 @@ public class ProxyServlet extends AbstractServletFilter {
             logger.debug("proxy Jahia URI : "+requestURI);
             try {
                 JCRSiteNode siteNode = getSiteNode(siteInfo.get("siteKey"));
-                 if(hasMixin(siteNode,J_PROPS_HEADLESS_MIXIN)){
+                if (hasMixin(siteNode, J_PROPS_HEADLESS_MIXIN)) {
 
-                     httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_URI,getTargetPreviewPath(siteNode,request));
-                     httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_SECRET,getTargetPreviewSecret(siteNode));
+                    httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_URI, getTargetPreviewPath(siteNode, request));
+                    httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_SECRET, getTargetPreviewSecret(siteNode));
 
-                     String reqTargetUri = getTargetHost(siteNode);
-                     if (reqTargetUri == null)
-                         throw new ServletException(P_TARGET_URI+" is required.");
-                     //test it's valid
-                     try {
-                         targetUriObj = new URI(reqTargetUri);
-                     } catch (Exception e) {
-                         throw new ServletException("Trying to process reqTargetUri parameter: "+e,e);
-                     }
+                    String cookies = httpServletRequest.getHeader(org.apache.http.cookie.SM.COOKIE);
+                    JSONObject jContentHeaderJSON = new JSONObject();
+                    jContentHeaderJSON.put("locale", siteInfo.get("locale"));
+                    if (requestURI.startsWith(J_EDITFRAME_URI)) {
+                        jContentHeaderJSON.put("edit", true);
+                    }
 
-                     httpServletRequest.setAttribute(ATTR_TARGET_URI,reqTargetUri);
-                     httpServletRequest.setAttribute(ATTR_TARGET_HOST,URIUtils.extractHost(targetUriObj));
-                     service(httpServletRequest, (HttpServletResponse) response);
-                     return;
-                 }
-            } catch (RepositoryException e) {
+                    httpServletRequest.setAttribute(ATTR_HEADLESS_JCONTENT_COOKIE, jContentHeaderJSON.toString());
+
+                    String reqTargetUri = getTargetHost(siteNode);
+                    if (reqTargetUri == null)
+                        throw new ServletException(P_TARGET_URI + " is required.");
+                    //test it's valid
+                    try {
+                        targetUriObj = new URI(reqTargetUri);
+                    } catch (Exception e) {
+                        throw new ServletException("Trying to process reqTargetUri parameter: " + e, e);
+                    }
+
+                    httpServletRequest.setAttribute(ATTR_TARGET_URI, reqTargetUri);
+                    httpServletRequest.setAttribute(ATTR_TARGET_HOST, URIUtils.extractHost(targetUriObj));
+                    service(httpServletRequest, (HttpServletResponse) response);
+                    return;
+                }
+            }catch (JSONException e) {
+                e.printStackTrace();
+            }catch (RepositoryException e) {
                 e.printStackTrace();
             }
         }
@@ -736,7 +750,15 @@ public class ProxyServlet extends AbstractServletFilter {
                 if (host.getPort() != -1)
                     headerValue += ":"+host.getPort();
             } else if (!doPreserveCookies && headerName.equalsIgnoreCase(org.apache.http.cookie.SM.COOKIE)) {
-                headerValue = getRealCookie(headerValue);
+
+//                headerValue = getRealCookie(headerValue);
+                String jContentEditCookie = (String) servletRequest.getAttribute(ATTR_HEADLESS_JCONTENT_COOKIE);
+                headerValue = new StringBuilder(getRealCookie(headerValue))
+                        .append(";")
+                        .append(ATTR_HEADLESS_JCONTENT_COOKIE)
+                        .append("=")
+                        .append(jContentEditCookie)
+                        .toString();
             }
             proxyRequest.addHeader(headerName, headerValue);
         }
@@ -968,16 +990,18 @@ public class ProxyServlet extends AbstractServletFilter {
 
 
         String rewritedQueryString= queryString != null ? queryString: "";
+
         if(!rewritedQueryString.isEmpty())
             rewritedQueryString += "&";
-        rewritedQueryString += "locale="+siteInfo.get("locale");
 
-        if (requestURI.startsWith(J_EDITFRAME_URI)){
-            rewritedQueryString += "&edit=true";
-        }
+//        rewritedQueryString += "locale="+siteInfo.get("locale");
+
+//        if (requestURI.startsWith(J_EDITFRAME_URI)){
+//            rewritedQueryString += "&edit=true";
+//        }
 
         if(previewUri != null){
-            rewritedQueryString += "&path="+getProxyPath(siteInfo);
+            rewritedQueryString += "path="+getProxyPath(siteInfo);
             if(previewSecret != null){
                 rewritedQueryString += "&secret="+previewSecret;
             }
