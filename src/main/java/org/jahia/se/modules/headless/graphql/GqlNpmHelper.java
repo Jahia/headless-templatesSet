@@ -14,10 +14,7 @@ import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.JCRSessionFactory;
 import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.content.JCRTemplate;
-import org.jahia.services.render.RenderContext;
-import org.jahia.services.render.RenderException;
-import org.jahia.services.render.RenderService;
-import org.jahia.services.render.Resource;
+import org.jahia.services.render.*;
 import org.jahia.services.uicomponents.bean.editmode.EditConfiguration;
 import org.jahia.utils.LanguageCodeConverters;
 
@@ -154,10 +151,13 @@ public class GqlNpmHelper {
 
     private String getRenderedComponent(String mainResourcePath, String path, GqlJcrNodeInput input, String view, String templateType, String contextConfiguration, Boolean isEditMode, DataFetchingEnvironment environment, JCRSessionWrapper session) throws RepositoryException {
         JCRNodeWrapper main = session.getNode(mainResourcePath);
+        JCRNodeWrapper parent;
+        JCRSessionWrapper systemSession = JCRSessionFactory.getInstance().getCurrentSystemSession(session.getWorkspace().getName(), session.getLocale(), session.getFallbackLocale());
         if (path == null) {
-            path = "/";
+            parent = systemSession.getNode("/").addNode("tmp");
+        } else {
+            parent = systemSession.getNode(path);
         }
-        JCRNodeWrapper parent = session.getNode(path);
 
         String name = input.getName();
         if (name == null) {
@@ -184,13 +184,20 @@ public class GqlNpmHelper {
         RenderContext renderContext = getRenderContext(environment);
         renderContext.setServletPath(Render.getRenderServletPath());
         renderContext.setSite(main.getResolveSite());
-        renderContext.setMainResource(new Resource(main, templateType, null, contextConfiguration));
+        Resource mainResource = new Resource(main, templateType, null, contextConfiguration);
+        renderContext.setMainResource(mainResource);
+
+        Template t = renderService.resolveTemplate(mainResource, renderContext);
+        renderContext.getRequest().setAttribute("previousTemplate", t);
+        renderContext.getRequest().setAttribute("templateSet", Boolean.TRUE);
+
         if (isEditMode != null) {
             renderContext.setEditMode(isEditMode);
             if (isEditMode) {
                 renderContext.setEditModeConfig((EditConfiguration) SpringContextSingleton.getBean("editmode"));
             }
         }
+
         try {
             return renderService.render(r, renderContext);
         } catch (RenderException e) {
