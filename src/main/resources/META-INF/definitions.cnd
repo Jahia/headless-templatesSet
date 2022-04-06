@@ -2,6 +2,10 @@
 <jmix = 'http://www.jahia.org/jahia/mix/1.0'>
 <j = 'http://www.jahia.org/jahia/1.0'>
 
+[jmix:headlessPageTemplate] mixin
+ extends = jnt:page
+ - j:templateNameHeadless (string,choicelist[headlessTemplateNameInitializer]) nofulltext
+
 //jmix:hasTemplateNode
 // - j:templateName (string,choicelist[templatesNode]) mandatory nofulltext
 
@@ -17,4 +21,5 @@
   - j:headlessHost (string) nofulltext
   - j:headlessPreviewURL (string) nofulltext
   - j:headlessPreviewSecret (string) nofulltext
+  - j:headlessTemplateListPath (string) nofulltext
 //  - j:headlessFrameworkURLs (string) multiple nofulltext
