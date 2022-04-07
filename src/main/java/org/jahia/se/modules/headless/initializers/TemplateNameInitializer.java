@@ -1,5 +1,6 @@
 package org.jahia.se.modules.headless.initializers;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.jahia.se.modules.headless.services.Template;
 import org.jahia.se.modules.headless.services.TemplateService;
 import org.jahia.services.content.JCRNodeWrapper;
@@ -7,7 +8,6 @@ import org.jahia.services.content.decorator.JCRSiteNode;
 import org.jahia.services.content.nodetypes.ExtendedPropertyDefinition;
 import org.jahia.services.content.nodetypes.initializers.ChoiceListValue;
 import org.jahia.services.content.nodetypes.initializers.ModuleChoiceListInitializer;
-import org.json.JSONException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -65,7 +67,7 @@ public class TemplateNameInitializer implements ModuleChoiceListInitializer{
     public List<ChoiceListValue> getChoiceListValues(ExtendedPropertyDefinition epd, String param, List<ChoiceListValue> values, Locale locale, Map<String, Object> context) {
         List<ChoiceListValue> choiceListValues = new ArrayList<>();
         StringBuilder endpoint = new StringBuilder();
-
+        URI uri;
         try {
             JCRNodeWrapper node = (JCRNodeWrapper)
                     ((context.get("contextParent") != null)
@@ -76,6 +78,7 @@ public class TemplateNameInitializer implements ModuleChoiceListInitializer{
 
             String endpointHost  = siteNode.getProperty("j:headlessHost").getValue().toString();
             String endpointPath  = siteNode.getProperty("j:headlessTemplateListPath").getValue().toString();
+            String endpointSecret  = siteNode.getProperty("j:headlessPreviewSecret").getValue().toString();
 
             if(endpointHost == null || endpointHost.length() == 0){
                 logger.error("*** Headless frontend server url not configured ***");
@@ -88,14 +91,17 @@ public class TemplateNameInitializer implements ModuleChoiceListInitializer{
             }
 
             endpoint.append(endpointHost).append(endpointPath);
+            URIBuilder builder = new URIBuilder(endpoint.toString());
+            builder.setParameter("secret", endpointSecret);
+            uri = builder.build();
 
-        } catch (RepositoryException  e){
+        } catch (RepositoryException | URISyntaxException e){
             logger.error("Error happened", e);
             return choiceListValues;
         }
 
         Template[] templates;
-        templates = templateService.getTemplates(endpoint.toString());
+        templates = templateService.getTemplates(uri);
         return Stream.of(templates).map(template -> new ChoiceListValue(template.getDisplayName(), template.getName())).collect(Collectors.toList());
     }
 

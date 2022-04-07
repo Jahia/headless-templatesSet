@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
 
 @Component(service = TemplateService.class, immediate = true)
 public class TemplateService {
@@ -18,10 +19,10 @@ public class TemplateService {
         this.apiService = apiService;
     }
 
-    public Template[] getTemplates(String endpoint) {
+    public Template[] getTemplates(URI uri) {
         if (apiService != null) {
             try {
-                Template[] data = apiService.execute(new HttpGet(endpoint), Template[].class);
+                Template[] data = apiService.execute(new HttpGet(uri), Template[].class);
                 if (data != null) {
                     return data;
                 }

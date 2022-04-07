@@ -382,6 +382,10 @@ public class ProxyServlet extends AbstractServletFilter {
 
         Map<String,String> siteInfo = getSiteInfo(request);
 
+        //if url contains webpack-hmr stop the call
+        if(requestURI.contains("webpack-hmr"))
+            return;
+
         if(siteInfo != null && !siteInfo.isEmpty()){
             httpServletRequest.setAttribute("siteInfo",siteInfo);
 
@@ -437,7 +441,7 @@ public class ProxyServlet extends AbstractServletFilter {
 
         //jahia technical url like <siteKey>.manageSiteRoles.html are used be sure pagePath exist
         if(uriPart.contains("sites") && (uriPart.indexOf("sites")+2 <= uriPart.toArray().length-1)){
-            logger.info("uriPart :"+uriPart);
+            logger.debug("uriPart :"+uriPart);
 
             String siteKey = uriPart.get(uriPart.indexOf("sites")+1);
             int endIndex = uri.indexOf(".html")!=-1 ?
