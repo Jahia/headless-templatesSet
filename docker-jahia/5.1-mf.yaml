@@ -1,0 +1,26 @@
+- importSite: jar:mvn:org.jahia.modules/digitall/2.0.0/zip/import!/Digitall.zip
+- import: jar:mvn:org.jahia.modules/digitall/2.0.0/zip/import!/users.zip
+- addMavenRepository: 'https://devtools.jahia.com/nexus/content/groups/enterprise@id=jahia-enterprise@snapshots'
+  username: user
+  password: password
+- addMavenRepository: 'https://devtools.jahia.com/nexus/content/groups/marketing-factory-group@id=marketing-factory-group@snapshots'
+  username: user
+  password: password
+- installBundle:
+  - 'mvn:org.jahia.modules/jexperience'
+  - 'mvn:org.jahia.modules/jexperience-data-generator'
+  autoStart: true
+  uninstallPreviousVersion: true
+# Enable jExperience on digitall
+- enable: "jexperience"
+  site: "digitall"
+# Configure jExperience
+- editConfiguration: "org.jahia.modules.jexperience.settings"
+  configIdentifier: "global"
+  properties: 
+    jexperience.jCustomerURL: "https://jcustomer:9443"
+    jexperience.jCustomerUsername: "karaf"
+    jexperience.jCustomerPassword: "jcustomerP@55"
+    jexperience.jCustomerTrustAllCertificates: "true"
+    jexperience.jCustomerUsePublicAddressesForAdmin: "false"
+    jexperience.jCustomerKey: "670c26d1cc413346c3b2fd9ce65dab41"
