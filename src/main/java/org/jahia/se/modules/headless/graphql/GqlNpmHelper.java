@@ -168,7 +168,11 @@ public class GqlNpmHelper {
         Collection<GqlJcrPropertyInput> properties = input.getProperties();
         if (properties != null) {
             for (GqlJcrPropertyInput property : properties) {
-                node.setProperty(property.getName(), property.getValue());
+                if (property.getValues() != null) {
+                    node.setProperty(property.getName(), property.getValues().toArray(new String[0]));
+                } else {
+                    node.setProperty(property.getName(), property.getValue());
+                }
             }
         }
 
