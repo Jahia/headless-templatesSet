@@ -40,6 +40,7 @@ import java.net.HttpCookie;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * An HTTP reverse proxy/gateway servlet. It is designed to be extended for customization
@@ -450,6 +451,8 @@ public class ProxyServlet extends AbstractServletFilter {
     }
 
     private @Nullable Map<String, String> extractSiteInfo(String uri) {
+//        String path = uri.split("\\?")[0];
+
         List<String> uriPart = Arrays.stream(uri.split("/")).collect(Collectors.toList());
         Map<String, String> ret = new HashMap<>();
 
@@ -459,18 +462,15 @@ public class ProxyServlet extends AbstractServletFilter {
 
         //jahia technical url like <siteKey>.manageSiteRoles.html are used be sure pagePath exist
         int sitesIndex = uriPart.indexOf("sites");
-        if (uriPart.contains("sites") && (sitesIndex + 2 <= uriPart.size() - 1)) {
+        if (sitesIndex >=0) {
             logger.debug("uriPart :" + uriPart);
-
             String siteKey = uriPart.get(sitesIndex + 1);
-            int endIndex = uri.indexOf(".html") != -1 ?
-                    uri.indexOf(".html") :
-                    uri.indexOf("?") != -1 ? uri.indexOf("?") : uri.length();
+
+            int endIndex = uri.indexOf(".html") != -1 ? uri.indexOf(".html") : uri.length();
             int startIndex = uri.indexOf(siteKey) + siteKey.length();
             if (startIndex >= endIndex) {
                 return null;
             }
-
             String pagePath = uri.substring(startIndex, endIndex);
 
             ret.put("siteKey", siteKey);
@@ -490,8 +490,8 @@ public class ProxyServlet extends AbstractServletFilter {
 //                .collect(Collectors.toList()).get(0);
 
         String requestURI = httpServletRequest.getRequestURI();
-
-        if (requestURI.endsWith(".do")) {
+        //bypass technical URL with action (.do) or with template like /cms/editframe/default/en/sites/headless-industrial.manageLanguages.html
+        if (requestURI.endsWith(".do") || requestURI.matches(".*\\..*\\.html")) {
             return null;
         }
 
