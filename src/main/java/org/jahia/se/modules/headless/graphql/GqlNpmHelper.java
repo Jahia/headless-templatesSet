@@ -194,6 +194,7 @@ public class GqlNpmHelper {
         Template t = renderService.resolveTemplate(mainResource, renderContext);
         renderContext.getRequest().setAttribute("previousTemplate", t);
         renderContext.getRequest().setAttribute("templateSet", Boolean.TRUE);
+        renderContext.getRequest().setAttribute("gqlNpm.depthLimit", 1);
 
         if (isEditMode != null) {
             renderContext.setEditMode(isEditMode);
