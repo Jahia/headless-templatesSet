@@ -32,7 +32,7 @@ public class CountFilter extends AbstractFilter {
             }
             current.push(resource.getPath());
 
-            if (current.size() > (int) renderContext.getRequest().getAttribute("depthLimit")) {
+            if (current.size() > (int) renderContext.getRequest().getAttribute("gqlNpm.depthLimit")) {
                 return "";
             }
         }
@@ -41,7 +41,7 @@ public class CountFilter extends AbstractFilter {
 
     @Override
     public String execute(String previousOut, RenderContext renderContext, Resource resource, RenderChain chain) throws Exception {
-        if (renderContext.getRequest().getAttribute("depthLimit") != null) {
+        if (renderContext.getRequest().getAttribute("gqlNpm.depthLimit") != null) {
             Deque<String> current = (Deque<String>) renderContext.getRequest().getAttribute("renderStack");
             current.pop();
         }
