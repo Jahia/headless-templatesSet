@@ -11,3 +11,12 @@
   configIdentifier: "headless"
   properties:
     headless.auto_apply[1].origin: "http://vercel:3000"
+- editConfiguration:  "org.jahia.se.modules.widen_provider"
+  properties:
+    widen_provider.apiProtocol: "https"
+    widen_provider.apiEndPoint: "api.widencollective.com"
+    widen_provider.apiVersion: "v2"
+    widen_provider.apiSite: "cloud"
+    widen_provider.apiToken: "de6671854a9e5af700c964aebaf2f1ed"
+    widen_provider.lazyLoad: "false"
+    widen_provider.resultPerPage: "20"
