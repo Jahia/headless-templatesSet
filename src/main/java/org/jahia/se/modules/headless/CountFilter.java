@@ -10,7 +10,6 @@ import org.osgi.service.component.annotations.Component;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Stack;
 
 @Component(service = RenderFilter.class)
 public class CountFilter extends AbstractFilter {

@@ -836,6 +836,9 @@ public class ProxyServlet extends AbstractServletFilter {
                                    HttpServletResponse servletResponse, String headerValue) {
         for (HttpCookie cookie : HttpCookie.parse(headerValue)) {
             Cookie servletCookie = createProxyCookie(servletRequest, cookie);
+            if (servletRequest.getScheme().equalsIgnoreCase("http")) {
+                servletCookie.setSecure(false);
+            }
             servletResponse.addCookie(servletCookie);
         }
     }
