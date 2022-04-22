@@ -2,7 +2,7 @@
   - 'mvn:org.jahia.modules/popperjs'
   - 'mvn:org.jahia.modules/bootstrap4-core'
   - 'mvn:org.jahia.modules/bootstrap4-components'
-  - 'mvn:org.jahia.se.modules/codemirror-editor'
+  - 'https://store.jahia.com/cms/mavenproxy/private-app-store/org/jahia/se/modules/codemirror-editor/1.1.3/codemirror-editor-1.1.3.jar'
   - 'mvn:org.jahia.se.modules/jahia-industrial'
   - 'https://store.jahia.com/cms/mavenproxy/private-app-store/org/jahia/se/modules/industrial-media-component/1.0.0/industrial-media-component-1.0.0.jar'
   - 'mvn:org.jahia.se.modules/headless-templatesSet'
