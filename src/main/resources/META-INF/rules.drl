@@ -1,0 +1,38 @@
+package org.jahia.se.modules.headless.rules
+
+#list any import classes here.
+import org.jahia.services.content.rules.*
+import org.slf4j.Logger
+
+//expander rules.dsl
+
+#declare any global variables here
+global User user
+global Service service
+global Logger logger
+global RulesNotificationService notificationService
+###############################################################################
+
+
+# set a property when a node is created
+rule "set a property on virtualnode when the node is created"
+   when
+        A new node is created
+            - the node has the type jnt:virtualsite
+            - installed modules contains headless-templatesSet
+   then
+       Log "Start: Adding a property for this virtualsite " + node.getName()
+       Set the property j:defaultTemplateName of the node with the value "default"
+       Log "End: Adding a property for this virtualsite " + node.getName()
+end
+
+# enable a mixin when a node is created
+//rule "add the type headlessPageTemplate to new page"
+//   when
+//        A new node is created
+//            - the node has the type jnt:page
+//   then
+//       Log "Start: Adding a property for this virtualsite " + node.getName()
+//       Add the type jmix:headlessPageTemplate
+//       Log "End: Adding a property for this virtualsite " + node.getName()
+//end
