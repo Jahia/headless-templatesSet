@@ -13,5 +13,5 @@
 - editConfiguration: "org.jahia.bundles.api.authorization"
   configIdentifier: "headless"
   properties:
-    headless.auto_apply[1].origin: "http://vercel:3000"
+    headless.auto_apply[1].origin: "http://vercel.my.local:3000"
 
