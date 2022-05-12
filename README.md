@@ -1,4 +1,6 @@
-# headless-templatesSet
+# The Jahia Nextjs initiative : *headless-templatesSet*
+
+## Initiative overview
 
 This module is one of the three components of the Jahia Nextjs initiative. The aim of this initiative is
 to explore and explain the Jahia capabilities to easily create and manage headless web project.
