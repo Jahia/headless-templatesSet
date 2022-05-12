@@ -416,7 +416,9 @@ public class ProxyServlet extends AbstractServletFilter {
                     httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_URI, getTargetPreviewPath(siteNode, request));
                     httpServletRequest.setAttribute(ATTR_HEADLESS_PREVIEW_SECRET, getTargetPreviewSecret(siteNode));
 
-                    String cookies = httpServletRequest.getHeader(org.apache.http.cookie.SM.COOKIE);
+                    //note used anymore
+//                    String cookies = httpServletRequest.getHeader(org.apache.http.cookie.SM.COOKIE);
+
                     JSONObject jContentHeaderJSON = new JSONObject();
                     jContentHeaderJSON.put("locale", siteInfo.get("locale"));
                     if (requestURI.startsWith(J_EDITFRAME_URI)) {
@@ -1003,7 +1005,7 @@ public class ProxyServlet extends AbstractServletFilter {
     }
 
     private String getProxyPath(Map<String, String> siteInfo) {
-        //TODO maybe return also : siteInfo.get("locale")/sites
+        //Locale is managed by cookie
 //        return "/"+siteInfo.get("locale")+"/sites/"+siteInfo.get("siteKey")+siteInfo.get("pagePath");
         return "/sites/" + siteInfo.get("siteKey") + siteInfo.get("pagePath");
     }
