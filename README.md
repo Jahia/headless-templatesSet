@@ -5,7 +5,7 @@ to explore and explain the Jahia capabilities to easily create and manage headle
 
 |Developers|Web Contributors|
 |---|---|
-|A web project is easy to create and maintain when they have an SDK in their preferred languages, and they can create, update, test and deploy component quickly.| A web project is easy to maintain when they understand the web site page structure and when they can create a content by clicking a button or just copy past a WYSIWYG content.|
+|A web project is easy to create and maintain when they have an SDK in their preferred languages, and they can create, update, test and deploy component quickly.| A web project is easy to contribute and maintain when they understand the web site page structure and when they can create a content by clicking a button or just copy past a WYSIWYG content in the web page.|
 | ![100] | ![101] |
 
 
