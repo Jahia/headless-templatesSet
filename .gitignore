@@ -8,6 +8,8 @@
 *.iml
 *.ipr
 
+*.xcf
+
 # Maven
 target
 
