@@ -25,8 +25,8 @@ Also, in the Jahia Nextjs initiative this template set is used to handle other t
 [100]: doc/images/100_DevPageTemplate.png
 [101]: doc/images/101_ContribPageTempalte.png
 
-[proxy]: ./src/main/java/org/jahia/se/modules/headless/ProxyServlet.java
-[initializer]: ./src/main/java/org/jahia/se/modules/headless/initializers/TemplateNameInitializer.java
-[graphQL]: ./src/main/java/org/jahia/se/modules/headless/graphql
+[proxy]: ../../nextjs-proxy/src/main/java/org/jahia/se/modules/headless/ProxyServlet.java
+[initializer]: ../../nextjs-proxy/src/main/java/org/jahia/se/modules/headless/initializers/TemplateNameInitializer.java
+[graphQL]: ../../nextjs-proxy/src/main/java/org/jahia/se/modules/headless/graphql
 [template]: ./src/main/resources/jnt_template/html/template.headless-templatesSet.jsp
 [definition]: ./src/main/resources/META-INF/definitions.cnd
