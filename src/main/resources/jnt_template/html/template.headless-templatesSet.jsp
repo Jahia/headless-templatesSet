@@ -16,11 +16,27 @@
 <%--@elvariable id="url" type="org.jahia.services.render.URLGenerator"--%>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,900" rel="stylesheet">
 <%--    <meta http-equiv="Refresh" content="0; url=//localhost:3000" />--%>
+    <style>
+        body {
+            font-family:Lato;
+        }
+        article {
+            padding: 0 1em;
+        }
+        blockquote {
+            padding: 0 1em;
+            color: #57606a;
+            border-left: .25em solid #d0d7de;
+        }
+    </style>
 </head>
 <body>
 
 <h1><fmt:message key="label.config.title"/></h1>
-<p><fmt:message key="label.config.desc"/></p>
+<article>
+    <fmt:message key="label.config.desc"/>
+</article>
 </body>
 </html>

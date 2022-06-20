@@ -12,7 +12,7 @@
     <groupId>org.jahia.se.modules</groupId>
     <artifactId>headless-templatesSet</artifactId>
     <name>Templates Set for headless project</name>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.0.1.alpha-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <description>This is the custom profile module (Templates Set for headless project) for running on a Jahia server.</description>
 
@@ -79,7 +79,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <_dsannotations>*</_dsannotations>
+<!--                        <_dsannotations>*</_dsannotations>-->
                         <Jahia-Module-Type>templatesSet</Jahia-Module-Type>
                         <Jahia-Depends>default</Jahia-Depends>
                         <Jahia-Static-Resources>/img</Jahia-Static-Resources>
