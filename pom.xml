@@ -9,7 +9,6 @@
         <groupId>org.jahia.modules</groupId>
         <version>8.1.0.0</version>
     </parent>
-    <groupId>org.jahia.se.modules</groupId>
     <artifactId>headless-templatesSet</artifactId>
     <name>Templates Set for headless project</name>
     <version>0.0.1.alpha-SNAPSHOT</version>
@@ -24,16 +23,10 @@
 
     <properties>
         <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
+        <jahia-module-signature>MC0CFHkViJ+MixuRusFlN5svFP7f9ChGAhUAkeKA6inU0lnEmz8VBEVO6DO43c4=</jahia-module-signature>
     </properties>
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>org.osgi</groupId>-->
-<!--            <artifactId>org.osgi.annotation</artifactId>-->
-<!--            <version>${osgi.version}</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>org.jahia.modules</groupId>
             <artifactId>graphql-dxm-provider</artifactId>
