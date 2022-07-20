@@ -2,8 +2,13 @@
 
 ## Initiative overview
 
-This module is one of the three components of the Jahia Nextjs initiative. The aim of this initiative is
-to explore and explain the Jahia capabilities to easily create and manage headless web project.
+The aim of the Jahia Nextjs initiative is to explore and explain
+the Jahia capabilities, to easily create and manage headless web project.
+Solutions we use are :
+- [Jahia][jahia-website] : a Cloud / On-premise *DXP* solution to create and contribute
+- [Vercel][vercel-website] a next-js Cloud platform provider to render the web project
+
+To know more about the Jahia Nextjs initiative [read this dedicated page][initiative.md].
 
 |Developers|Web Contributors|
 |---|---|
@@ -14,19 +19,18 @@ to explore and explain the Jahia capabilities to easily create and manage headle
 This github repository contains the source code of a Jahia **Templates Set** specially created
 to manage headless projects. Usually in Jahia, this kind of module is used to pre-designed web page skeletons. But,
 in the case of an headless projects, the web page skeletons and templates are not managed inside the CMS.
-Also, in the Jahia Nextjs initiative this template set is used to handle other topics. This module provides :
-- an [HTTP proxy][proxy] to redirect edit and preview rendering
-- a [mixin][definition] to configure paths and token to interact with your Nextjs app
-- a [mixin][definition] and its [contentList Initializer][initializer] to list and select headless templates for your pages
-- a [graphQL extension provider][graphQL] to create content areas (temporarily in this module)
-
-
+Also, in the Jahia Nextjs initiative this template set is used to handle simpler topics. This module provides :
+- a [default template][template] to inform that the templateSet must be used in conjunction with a proxy like the [nextjs-proxy].
+- a [drools rule][rule] to configure a default for each page. In headless project templates are not managed by jahia, but the proxy
+can offer a selector to list the templates manage by the headless framework.
 
 [100]: doc/images/100_DevPageTemplate.png
 [101]: doc/images/101_ContribPageTempalte.png
 
-[proxy]: ../../nextjs-proxy/src/main/java/org/jahia/se/modules/headless/ProxyServlet.java
-[initializer]: ../../nextjs-proxy/src/main/java/org/jahia/se/modules/headless/initializers/TemplateNameInitializer.java
-[graphQL]: ../../nextjs-proxy/src/main/java/org/jahia/se/modules/headless/graphql
+[jahia-website]: https://www.jahia.com
+[vercel-website]: https://vercel.com
+[initiative.md]: https://github.com/Jahia/jahia-nextjs-initiative/blob/main/README.md
+[nextjs-proxy]: https://github.com/Jahia/nextjs-proxy
+
 [template]: ./src/main/resources/jnt_template/html/template.headless-templatesSet.jsp
-[definition]: ./src/main/resources/META-INF/definitions.cnd
+[rule]: ./src/main/resources/META-INF/rules.drl
